@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Disease Prevention Strategies: Jigsaw Builder</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,900;1,9..144,500&family=Hanken+Grotesk:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#f6f1e7; --paper-2:#efe7d6; --ink:#21271f; --muted:#6f7468; --line:#d9cfb9;
+    --good:#2f8f4e; --bad:#c5462f;
+    --c-php:#0e8088; --c-quar:#c2741b; --c-pest:#5a8a2c; --c-gene:#6b4ea6; --c-vacc:#b23a4a;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    font-family:"Hanken Grotesk",sans-serif; color:var(--ink); background-color:var(--paper);
+    background-image:radial-gradient(circle at 1px 1px, rgba(33,39,31,.06) 1px, transparent 0);
+    background-size:22px 22px; line-height:1.45; -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:1160px;margin:0 auto;padding:18px 18px 50px;}
+
+  header.top{
+    display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;
+    gap:14px;border-bottom:2px solid var(--ink);padding-bottom:12px;
+  }
+  .titleblock h1{font-family:"Fraunces",serif;font-weight:900;font-size:clamp(24px,3.6vw,38px);
+    line-height:1.02;margin:0;letter-spacing:-.01em;}
+  .titleblock .kicker{font-weight:700;text-transform:uppercase;letter-spacing:.22em;font-size:11px;
+    color:var(--muted);margin-bottom:5px;}
+  .titleblock p{margin:6px 0 0;color:var(--muted);max-width:60ch;font-size:13.5px;}
+
+  .stats{display:flex;flex-wrap:wrap;gap:8px;}
+  .stat{background:#fff;border:1.5px solid var(--ink);border-radius:12px;padding:6px 12px;
+    min-width:78px;text-align:center;box-shadow:3px 3px 0 var(--ink);}
+  .stat .label{font-size:10px;text-transform:uppercase;letter-spacing:.14em;color:var(--muted);font-weight:700;}
+  .stat .val{font-family:"Fraunces",serif;font-weight:900;font-size:20px;line-height:1.1;}
+  .stat.streak .val{color:var(--c-quar);}
+  .stat.score .val{color:var(--c-pest);}
+
+  .playbar{
+    position:sticky;top:8px;z-index:40;background:#fff;border:2px solid var(--ink);
+    border-radius:16px;box-shadow:5px 5px 0 var(--ink);
+    display:flex;flex-wrap:wrap;align-items:center;gap:12px;justify-content:space-between;
+    padding:10px 14px;margin:12px 0 12px;
+  }
+  .pb-cap{font-family:"Fraunces",serif;font-weight:900;font-size:14px;line-height:1.1;min-width:110px;}
+  .pb-cap small{display:block;font-family:"Hanken Grotesk",sans-serif;font-weight:700;font-size:10.5px;
+    text-transform:uppercase;letter-spacing:.13em;color:var(--muted);margin-bottom:3px;}
+  .pb-cap .left-tag{display:inline-block;margin-top:5px;background:var(--ink);color:var(--paper);
+    font-size:11px;font-weight:700;border-radius:20px;padding:2px 10px;font-family:"Hanken Grotesk",sans-serif;}
+  .current-slot{flex:1 1 240px;display:flex;justify-content:center;min-width:240px;min-height:90px;align-items:center;}
+  .pb-actions{display:flex;gap:9px;flex-wrap:wrap;}
+
+  button.btn{font-family:"Hanken Grotesk",sans-serif;font-weight:700;font-size:13px;cursor:pointer;
+    border:1.5px solid var(--ink);background:#fff;color:var(--ink);border-radius:11px;padding:8px 13px;
+    box-shadow:3px 3px 0 var(--ink);transition:transform .08s ease, box-shadow .08s ease;}
+  button.btn:active{transform:translate(3px,3px);box-shadow:0 0 0 var(--ink);}
+  button.btn.primary{background:var(--ink);color:var(--paper);}
+  button.btn:disabled{opacity:.4;cursor:not-allowed;box-shadow:0 0 0 var(--ink);transform:none;}
+
+  .board-scroll{overflow-x:auto;padding-bottom:6px;}
+  .board{display:grid;grid-template-columns:178px repeat(4, minmax(150px,1fr));gap:7px;min-width:720px;}
+  .corner{display:flex;align-items:flex-end;font-family:"Fraunces",serif;
+    font-weight:600;font-style:italic;color:var(--muted);font-size:12px;padding:6px 4px;}
+  .colhead{background:var(--ink);color:var(--paper);border-radius:11px;padding:8px 10px;text-align:center;
+    font-weight:800;text-transform:uppercase;letter-spacing:.08em;font-size:11.5px;
+    display:flex;align-items:center;justify-content:center;}
+  .rowlabel{border-radius:12px;padding:8px 11px;display:flex;flex-direction:column;gap:5px;
+    border:1.5px solid var(--line);background:linear-gradient(180deg,#fff,#fbf7ee);position:relative;overflow:hidden;}
+  .rowlabel .ic{width:28px;height:28px;color:var(--muted);filter:grayscale(1);opacity:.5;transition:all .5s ease;}
+  .rowlabel .name{font-family:"Fraunces",serif;font-weight:900;font-size:13.5px;line-height:1.05;}
+  .rowlabel .seal{position:absolute;top:6px;right:6px;font-size:9px;font-weight:800;letter-spacing:.08em;
+    text-transform:uppercase;color:#fff;padding:2px 6px;border-radius:20px;opacity:0;transform:scale(.6);
+    transition:all .4s cubic-bezier(.3,1.4,.5,1);}
+  .rowlabel.done{border-color:currentColor;color:var(--col);}
+  .rowlabel.done .ic{filter:none;opacity:1;color:inherit;}
+  .rowlabel.done .seal{opacity:1;transform:scale(1);background:currentColor;}
+  .rowlabel.r0{--col:var(--c-php);} .rowlabel.r1{--col:var(--c-quar);}
+  .rowlabel.r2{--col:var(--c-pest);} .rowlabel.r3{--col:var(--c-gene);}
+  .rowlabel.r4{--col:var(--c-vacc);}
+
+  .cell{border:2px dashed var(--line);border-radius:12px;min-height:58px;background:rgba(255,255,255,.4);
+    padding:4px;position:relative;display:flex;transition:border-color .15s ease, background .15s ease;}
+  .cell.hot{border-color:var(--ink);background:#fffdf6;border-style:solid;}
+  .cell.filled{border-style:solid;border-color:transparent;background:transparent;padding:0;}
+  .cell.flashgood{animation:flashG .55s ease;}
+  .cell.flashbad{animation:shake .4s ease;}
+  @keyframes flashG{0%{box-shadow:0 0 0 0 rgba(47,143,78,.55);}100%{box-shadow:0 0 0 16px rgba(47,143,78,0);}}
+  @keyframes shake{0%,100%{transform:translateX(0);}20%{transform:translateX(-7px);}40%{transform:translateX(7px);}60%{transform:translateX(-5px);}80%{transform:translateX(5px);}}
+
+  /* Cards (pieces) */
+  .card{position:relative;border-radius:13px;border:1.5px solid var(--ink);background:#fff;
+    box-shadow:2px 2px 0 var(--ink);padding:11px 14px;font-size:12.4px;font-weight:500;color:var(--ink);
+    width:236px;cursor:grab;touch-action:none;user-select:none;line-height:1.32;
+    transition:box-shadow .1s ease,transform .1s ease;}
+  .card .ptype{display:block;font-size:9.5px;font-weight:800;letter-spacing:.13em;text-transform:uppercase;
+    color:var(--muted);margin-bottom:5px;}
+  .card::after{content:"";position:absolute;right:-9px;top:50%;width:16px;height:16px;margin-top:-8px;
+    background:#fff;border:1.5px solid var(--ink);border-radius:5px;transform:rotate(45deg);
+    border-left-color:transparent;border-bottom-color:transparent;}
+  .card::before{content:"";position:absolute;left:-2px;top:50%;width:14px;height:14px;margin-top:-7px;
+    background:var(--paper);border:1.5px solid var(--ink);border-radius:5px;transform:rotate(45deg);
+    border-right-color:transparent;border-top-color:transparent;z-index:2;}
+  .card.current{width:min(440px,100%);box-shadow:4px 5px 0 var(--ink);animation:floaty 2.6s ease-in-out infinite;}
+  .card.current::before{background:#fff;}
+  @keyframes floaty{0%,100%{transform:translateY(0) rotate(-.4deg);}50%{transform:translateY(-4px) rotate(.4deg);}}
+  .card.dragging{opacity:.22;animation:none;}
+  .card.shakeback{animation:shake .4s ease;}
+  .card.locked{cursor:default;box-shadow:none;animation:none;}
+  /* Placed cards become tiny markers, just enough to show what was placed */
+  .card.placed{
+    width:100%;background:var(--cellpaper,#fff);
+    border-color:var(--cardcol,var(--ink));border-left-width:4px;
+    box-shadow:none;animation:none;
+    font-size:8.8px;line-height:1.2;padding:4px 7px;
+  }
+  .card.placed .ptype{font-size:7.5px;margin-bottom:2px;letter-spacing:.08em;}
+  .card.placed::before,.card.placed::after{display:none;}
+  .ghost{position:fixed;z-index:9999;pointer-events:none;opacity:.97;
+    box-shadow:6px 12px 24px -6px rgba(0,0,0,.5);transform:rotate(-2deg) scale(1.02);animation:none;}
+
+  .row-reveal{position:fixed;inset:0;display:none;align-items:center;justify-content:center;z-index:60;pointer-events:none;}
+  .row-reveal .pop{background:#fff;border:2px solid var(--ink);border-radius:18px;padding:18px 28px;text-align:center;
+    box-shadow:6px 6px 0 var(--ink);animation:popIn .45s cubic-bezier(.2,1.5,.4,1);}
+  .row-reveal .pop .ic{width:50px;height:50px;}
+  .row-reveal .pop .t{font-family:"Fraunces",serif;font-weight:900;font-size:21px;margin-top:6px;}
+  .row-reveal .pop .b{font-weight:700;font-size:13px;margin-top:2px;}
+  @keyframes popIn{from{transform:scale(.4);opacity:0;}to{transform:scale(1);opacity:1;}}
+
+  .modal{position:fixed;inset:0;background:rgba(20,24,18,.55);display:none;align-items:center;justify-content:center;z-index:70;padding:20px;}
+  .modal .panel{background:var(--paper);border:2.5px solid var(--ink);border-radius:20px;max-width:460px;width:100%;
+    padding:28px 28px 24px;box-shadow:10px 10px 0 var(--ink);text-align:center;animation:popIn .5s cubic-bezier(.2,1.4,.4,1);}
+  .modal .panel h2{font-family:"Fraunces",serif;font-weight:900;font-size:28px;margin:0 0 4px;}
+  .modal .panel .sub{color:var(--muted);font-size:13.5px;margin-bottom:16px;}
+  .scoregrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:18px;}
+  .scoregrid .box{border:1.5px solid var(--ink);border-radius:12px;padding:9px;background:#fff;}
+  .scoregrid .box .l{font-size:10px;text-transform:uppercase;letter-spacing:.12em;color:var(--muted);font-weight:700;}
+  .scoregrid .box .v{font-family:"Fraunces",serif;font-weight:900;font-size:23px;}
+
+  #notebook{display:none;}
+  .nb-head{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-end;gap:14px;
+    border-bottom:2px solid var(--ink);padding-bottom:14px;margin-bottom:18px;}
+  .nb-head h1{font-family:"Fraunces",serif;font-weight:900;font-size:clamp(22px,3.4vw,34px);margin:0;}
+  .nb-head .kicker{font-weight:700;text-transform:uppercase;letter-spacing:.2em;font-size:11px;color:var(--muted);}
+  table.nb{width:100%;border-collapse:collapse;background:#fff;border:1.5px solid var(--ink);}
+  table.nb th,table.nb td{border:1px solid var(--line);padding:10px 12px;vertical-align:top;font-size:12.5px;}
+  table.nb thead th{background:var(--ink);color:var(--paper);font-size:11.5px;text-transform:uppercase;letter-spacing:.07em;}
+  table.nb th.strat{font-family:"Fraunces",serif;font-weight:900;font-size:14.5px;text-align:left;width:150px;color:#fff;}
+  table.nb th.strat.s0{background:var(--c-php);} table.nb th.strat.s1{background:var(--c-quar);}
+  table.nb th.strat.s2{background:var(--c-pest);} table.nb th.strat.s3{background:var(--c-gene);}
+  table.nb th.strat.s4{background:var(--c-vacc);}
+  table.nb td ul{margin:0;padding-left:16px;} table.nb td li{margin-bottom:3px;}
+  .nb-foot{margin-top:14px;color:var(--muted);font-size:12px;font-style:italic;font-family:"Fraunces",serif;}
+
+  #confetti{position:fixed;inset:0;pointer-events:none;z-index:80;display:none;}
+
+  @media (max-width:560px){
+    .stat{min-width:70px;padding:6px 9px;} .stat .val{font-size:17px;}
+    .titleblock p{font-size:13px;} .pb-cap{min-width:100%;}
+  }
+  @media print{
+    body{background:#fff;}
+    #game,header.top,#confetti,.modal,.row-reveal{display:none !important;}
+    #notebook{display:block !important;} .nb-actions{display:none !important;}
+    .wrap{max-width:none;padding:0;}
+    table.nb th,table.nb td{font-size:11px;padding:7px 9px;}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div id="game">
+    <header class="top">
+      <div class="titleblock">
+        <div class="kicker">Disease Prevention and Control</div>
+        <h1>The Strategy Jigsaw</h1>
+        <p>A piece appears above the table. Drag it into the right cell to lock it in and reveal the next piece. Not sure? Swap it for a different piece.</p>
+      </div>
+      <div class="stats">
+        <div class="stat score"><div class="label">Score</div><div class="val" id="sScore">0</div></div>
+        <div class="stat streak"><div class="label">Streak</div><div class="val" id="sStreak">0</div></div>
+        <div class="stat"><div class="label">Time</div><div class="val" id="sTime">0:00</div></div>
+      </div>
+    </header>
+
+    <div class="playbar">
+      <div class="pb-cap"><small>Place this piece</small>Drag it down into the table<span class="left-tag"><span id="remaining">20</span> pieces left</span></div>
+      <div class="current-slot" id="currentSlot"></div>
+      <div class="pb-actions">
+        <button class="btn" id="skipBtn">Different piece</button>
+        <button class="btn" id="restartBtn">Start again</button>
+      </div>
+    </div>
+
+    <div class="board-scroll"><div class="board" id="board"></div></div>
+  </div>
+
+  <div id="notebook">
+    <div class="nb-head">
+      <div>
+        <div class="kicker">Copy this into your notebook</div>
+        <h1>Disease Prevention Strategies: Summary</h1>
+      </div>
+      <div class="nb-actions pb-actions">
+        <button class="btn primary" id="printBtn">Print</button>
+        <button class="btn" id="downloadBtn">Download</button>
+        <button class="btn" id="backBtn">Back to activity</button>
+      </div>
+    </div>
+    <div id="nbTableHost"></div>
+    <p class="nb-foot">Tip: write the definitions in full sentences and keep the positives, negatives and examples as bullet points.</p>
+  </div>
+
+</div>
+
+<div class="row-reveal" id="rowReveal"><div class="pop"><div class="ic" id="revIc"></div><div class="t" id="revT"></div><div class="b" id="revB"></div></div></div>
+
+<div class="modal" id="modal">
+  <div class="panel">
+    <h2>Table complete!</h2>
+    <div class="sub">Every piece is in place. Here is how you did.</div>
+    <div class="scoregrid">
+      <div class="box"><div class="l">Final score</div><div class="v" id="mScore">0</div></div>
+      <div class="box"><div class="l">Time</div><div class="v" id="mTime">0:00</div></div>
+      <div class="box"><div class="l">Best streak</div><div class="v" id="mStreak">0</div></div>
+      <div class="box"><div class="l">Wrong tries</div><div class="v" id="mWrong">0</div></div>
+    </div>
+    <button class="btn primary" id="openNbBtn" style="width:100%;">Open my clean summary table</button>
+  </div>
+</div>
+
+<canvas id="confetti"></canvas>
+
+<script>
+(function(){
+  "use strict";
+
+  var ICONS = {
+    php:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11v2a1 1 0 0 0 1 1h2l4 4V6L6 10H4a1 1 0 0 0-1 1Z"/><path d="M14 8a4 4 0 0 1 0 8"/><path d="M17 5a8 8 0 0 1 0 14"/></svg>',
+    quar:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 5 6v5c0 4.4 3 8 7 9 4-1 7-4.6 7-9V6l-7-3Z"/><path d="M9 12h6M12 9v6"/></svg>',
+    pest:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10 3h3v3h-3z"/><path d="M9 6h5l1 3v10a1 1 0 0 1-1 1H9a1 1 0 0 1-1-1V9l1-3Z"/><path d="M15 7l4-1M15 10l4 1M15 13l4 3"/></svg>',
+    gene:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3c0 5 10 5 10 10S7 18 7 23"/><path d="M17 3c0 5-10 5-10 10s10 5 10 10"/><path d="M8.5 6h7M8 9.5h8M8 14.5h8M8.5 18h7"/></svg>',
+    vacc:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 2l4 4"/><path d="M15 5l4 4"/><path d="M19 9 8.5 19.5a2.5 2.5 0 0 1-3.5-3.5L15.5 5.5Z"/><path d="M10 13l2 2"/><path d="M5 19l2 2"/></svg>'
+  };
+
+  var STRATS = [
+    {key:'php', col:'var(--c-php)', cell:'#e8f4f4', name:'Public Health Campaigns', seal:'Public Health'},
+    {key:'quar',col:'var(--c-quar)',cell:'#f8eedb', name:'Quarantine',              seal:'Quarantine'},
+    {key:'pest',col:'var(--c-pest)',cell:'#eef3e1', name:'Use of Pesticides',       seal:'Pesticides'},
+    {key:'gene',col:'var(--c-gene)',cell:'#efeaf6', name:'Genetic Engineering',     seal:'Genetic'},
+    {key:'vacc',col:'var(--c-vacc)',cell:'#f5e3e6', name:'Vaccination',             seal:'Vaccination'}
+  ];
+  var COLS = ['Definition','Positives','Negatives','Examples'];
+
+  var DATA = [
+    [
+      "Organised efforts by governments and health bodies to educate people and promote behaviours, policies and environments that protect community health and prevent disease.",
+      "Low cost compared with treatment; reaches large populations; can shift behaviour for the long term; prevents disease before it starts.",
+      "Relies on voluntary cooperation; effects are slow and hard to measure; messages can be ignored or distrusted; may not reach every group equally.",
+      "Slip Slop Slap sun safety; the QUIT anti smoking campaign; flatten the curve during COVID; free cancer screening; mandatory notification of measles."
+    ],
+    [
+      "Separating and restricting the movement of people, animals, plants or goods that may carry a contagious disease, to stop spread before symptoms appear. Isolation is used for those already infected.",
+      "Very effective at stopping spread early; simple and needs no technology; works against new or unknown pathogens; buys time to organise other responses.",
+      "High economic and social cost; restricts personal freedom; hard to enforce fairly; causes psychological strain; weaker if a disease spreads before symptoms show.",
+      "Australian border biosecurity on incoming food, plants and animals; hotel quarantine during COVID-19; isolating livestock with a notifiable disease."
+    ],
+    [
+      "Chemicals used to kill organisms that are pests, pathogens or disease vectors. They include insecticides for insects, fungicides for fungi and herbicides for weeds.",
+      "Quickly lowers vector and pest numbers; controls vector borne disease such as malaria; protects crops and the food supply; relatively cheap and fast acting.",
+      "Pests evolve resistance through natural selection; harms the environment and non target species; toxic residues build up in food chains so DDT was banned; risks to human health.",
+      "DDT against Anopheles mosquitoes and lice; pyrethrum sprays; killing aphids that carry potato leaf roll virus; spraying goods imported into Australia."
+    ],
+    [
+      "Altering an organism's DNA to give it useful traits such as disease resistance. Organisms carrying genes from another species are called transgenic.",
+      "Resistance is inherited and long lasting; reduces the need for chemical sprays; can raise yields and food security; targets specific pests and pathogens.",
+      "Pests can still evolve resistance; raises ethical concerns; possible effects on biodiversity and the environment; not universally accepted; cost and regulation.",
+      "Bt cotton and corn carry bacterial genes that kill caterpillar pests; potatoes resistant to the Colorado beetle and leaf roll virus; transgenic livestock research."
+    ],
+    [
+      "Introducing a weakened, killed or modified form of a pathogen, or its antigens, to trigger the immune system to make antibodies and memory cells, giving protection against future infection without causing the disease.",
+      "Highly effective at preventing infection; can produce herd immunity that protects whole communities; long lasting protection; eradicated smallpox and almost eliminated polio; cheap compared with treating disease.",
+      "Some people cannot be vaccinated due to age, allergy or immune problems; rare side effects; needs a reliable cold chain; vaccine hesitancy lowers coverage; some pathogens mutate so boosters are needed.",
+      "Smallpox eradication in 1980; childhood MMR program for measles, mumps and rubella; the annual influenza shot; HPV vaccine to prevent cervical cancer; COVID-19 mRNA vaccines."
+    ]
+  ];
+
+  var TOTAL = STRATS.length * COLS.length; // 20
+
+  var state = {score:0, streak:0, bestStreak:0, wrong:0, placed:0,
+               started:false, startTime:0, timer:null};
+  var queue = [];
+
+  var board = document.getElementById('board');
+  var currentSlot = document.getElementById('currentSlot');
+  var cellMap = {};
+
+  function shuffle(a){for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=a[i];a[i]=a[j];a[j]=t;}return a;}
+
+  function buildBoard(){
+    board.innerHTML='';
+    var corner=document.createElement('div');
+    corner.className='corner';corner.textContent='Strategy \u2193  /  Attribute \u2192';
+    board.appendChild(corner);
+    COLS.forEach(function(c){var h=document.createElement('div');h.className='colhead';h.textContent=c;board.appendChild(h);});
+    STRATS.forEach(function(s,r){
+      var lab=document.createElement('div');lab.className='rowlabel r'+r;lab.id='rowlabel-'+r;
+      lab.innerHTML='<div class="ic">'+ICONS[s.key]+'</div><div class="name">'+s.name+'</div><div class="seal">'+s.seal+'</div>';
+      board.appendChild(lab);
+      for(var c=0;c<COLS.length;c++){
+        var cell=document.createElement('div');cell.className='cell';
+        cell.dataset.row=r;cell.dataset.col=c;cell.style.setProperty('--cellpaper', s.cell);
+        cellMap[r+'-'+c]=cell;board.appendChild(cell);
+      }
+    });
+  }
+
+  function buildQueue(){
+    queue=[];
+    for(var r=0;r<STRATS.length;r++){for(var c=0;c<COLS.length;c++){queue.push({r:r,c:c,text:DATA[r][c]});}}
+    shuffle(queue);
+  }
+
+  function renderCurrent(){
+    currentSlot.innerHTML='';
+    document.getElementById('remaining').textContent=queue.length;
+    document.getElementById('skipBtn').disabled = queue.length<=1;
+    if(!queue.length)return;
+    var p=queue[0];
+    var card=document.createElement('div');
+    card.className='card current';
+    card.dataset.row=p.r;card.dataset.col=p.c;
+    card.innerHTML='<span class="ptype">'+COLS[p.c]+'</span>'+p.text;
+    attachDrag(card);
+    currentSlot.appendChild(card);
+  }
+
+  var drag=null;
+  function attachDrag(card){
+    card.addEventListener('pointerdown',function(e){
+      if(card.classList.contains('locked'))return;
+      if(!state.started)startTimer();
+      e.preventDefault();
+      var rect=card.getBoundingClientRect();
+      drag={card:card, offX:e.clientX-rect.left, offY:e.clientY-rect.top, ghost:null, cell:null};
+      var ghost=card.cloneNode(true);
+      ghost.classList.add('ghost');ghost.classList.remove('current');
+      ghost.style.width=rect.width+'px';ghost.style.left=rect.left+'px';ghost.style.top=rect.top+'px';
+      document.body.appendChild(ghost);drag.ghost=ghost;
+      card.classList.add('dragging');
+      window.addEventListener('pointermove',onMove);
+      window.addEventListener('pointerup',onUp);
+    });
+  }
+  function onMove(e){
+    if(!drag)return;
+    drag.ghost.style.left=(e.clientX-drag.offX)+'px';
+    drag.ghost.style.top=(e.clientY-drag.offY)+'px';
+    var edge=72;
+    if(e.clientY<edge) window.scrollBy(0,-16);
+    else if(e.clientY>window.innerHeight-edge) window.scrollBy(0,16);
+    drag.ghost.style.display='none';
+    var el=document.elementFromPoint(e.clientX,e.clientY);
+    drag.ghost.style.display='';
+    var cell=el?el.closest('.cell'):null;
+    if(drag.cell&&drag.cell!==cell)drag.cell.classList.remove('hot');
+    if(cell&&!cell.classList.contains('filled')){cell.classList.add('hot');drag.cell=cell;}
+    else drag.cell=null;
+  }
+  function onUp(){
+    if(!drag)return;
+    window.removeEventListener('pointermove',onMove);
+    window.removeEventListener('pointerup',onUp);
+    var ghost=drag.ghost, card=drag.card, cell=drag.cell;
+    if(cell)cell.classList.remove('hot');
+    if(ghost&&ghost.parentNode)ghost.parentNode.removeChild(ghost);
+    card.classList.remove('dragging');
+    if(cell){
+      if(cell.dataset.row===card.dataset.row && cell.dataset.col===card.dataset.col){placeCorrect(card,cell);}
+      else{rejectCard(card,cell);}
+    }
+    drag=null;
+  }
+
+  function placeCorrect(card,cell){
+    cell.classList.add('filled','flashgood');
+    setTimeout(function(){cell.classList.remove('flashgood');},560);
+    card.classList.remove('current');
+    card.classList.add('placed','locked');
+    var s=STRATS[+cell.dataset.row];
+    card.style.setProperty('--cardcol', s.col);
+    cell.appendChild(card);
+
+    state.streak++;if(state.streak>state.bestStreak)state.bestStreak=state.streak;
+    addScore(100+(state.streak-1)*20);
+    state.placed++;
+    updateStats();beep(660,0.07);
+
+    queue.shift();
+    checkRow(+cell.dataset.row);
+    renderCurrent();
+    if(state.placed===TOTAL)finish();
+  }
+
+  function rejectCard(card,cell){
+    cell.classList.add('flashbad');setTimeout(function(){cell.classList.remove('flashbad');},420);
+    card.classList.add('shakeback');setTimeout(function(){card.classList.remove('shakeback');},420);
+    state.streak=0;state.wrong++;updateStats();beep(180,0.12);
+  }
+
+  function checkRow(r){
+    for(var c=0;c<COLS.length;c++){if(!cellMap[r+'-'+c].classList.contains('filled'))return;}
+    revealRow(r);
+  }
+  function revealRow(r){
+    var s=STRATS[r];
+    document.getElementById('rowlabel-'+r).classList.add('done');
+    addScore(300);updateStats();
+    var rev=document.getElementById('rowReveal');
+    document.getElementById('revIc').innerHTML=ICONS[s.key];
+    document.getElementById('revIc').style.color=s.col;
+    document.getElementById('revT').textContent=s.name+' complete';
+    document.getElementById('revT').style.color=s.col;
+    document.getElementById('revB').textContent='Row bonus  +300';
+    rev.style.display='flex';
+    burst(colVal(s.col));beep(880,0.09);setTimeout(function(){beep(1180,0.1);},90);
+    setTimeout(function(){rev.style.display='none';},1300);
+  }
+
+  document.getElementById('skipBtn').addEventListener('click',function(){
+    if(queue.length<=1)return;
+    var p=queue.shift();queue.push(p);
+    renderCurrent();
+  });
+
+  function addScore(n){state.score+=n;}
+  function updateStats(){
+    document.getElementById('sScore').textContent=state.score;
+    document.getElementById('sStreak').textContent=state.streak;
+  }
+  function startTimer(){
+    state.started=true;state.startTime=Date.now();
+    state.timer=setInterval(function(){document.getElementById('sTime').textContent=fmt(elapsed());},1000);
+  }
+  function elapsed(){return Math.floor((Date.now()-state.startTime)/1000);}
+  function fmt(s){var m=Math.floor(s/60);var ss=s%60;return m+':'+(ss<10?'0':'')+ss;}
+
+  function finish(){
+    clearInterval(state.timer);
+    var secs=elapsed();
+    state.score+=Math.max(0,700-secs*2);updateStats();
+    document.getElementById('mScore').textContent=state.score;
+    document.getElementById('mTime').textContent=fmt(secs);
+    document.getElementById('mStreak').textContent=state.bestStreak;
+    document.getElementById('mWrong').textContent=state.wrong;
+    bigCelebrate();
+    setTimeout(function(){document.getElementById('modal').style.display='flex';},700);
+  }
+
+  function buildNotebook(){
+    var host=document.getElementById('nbTableHost');
+    var html='<table class="nb"><thead><tr><th>Strategy</th>';
+    COLS.forEach(function(c){html+='<th>'+c+'</th>';});
+    html+='</tr></thead><tbody>';
+    STRATS.forEach(function(s,r){
+      html+='<tr><th class="strat s'+r+'">'+s.name+'</th>';
+      for(var c=0;c<COLS.length;c++){
+        if(c===0){html+='<td>'+DATA[r][0]+'</td>';}
+        else{
+          var parts=DATA[r][c].split(';').map(function(x){return x.trim();}).filter(Boolean);
+          html+='<td><ul>'+parts.map(function(p){return '<li>'+cap(p)+'</li>';}).join('')+'</ul></td>';
+        }
+      }
+      html+='</tr>';
+    });
+    html+='</tbody></table>';host.innerHTML=html;
+  }
+  function cap(s){return s.charAt(0).toUpperCase()+s.slice(1);}
+
+  document.getElementById('openNbBtn').addEventListener('click',function(){
+    document.getElementById('modal').style.display='none';
+    document.getElementById('game').style.display='none';
+    document.getElementById('notebook').style.display='block';
+    buildNotebook();window.scrollTo(0,0);
+  });
+  document.getElementById('backBtn').addEventListener('click',function(){
+    document.getElementById('notebook').style.display='none';
+    document.getElementById('game').style.display='block';window.scrollTo(0,0);
+  });
+  document.getElementById('printBtn').addEventListener('click',function(){window.print();});
+  document.getElementById('downloadBtn').addEventListener('click',downloadTable);
+
+  function downloadTable(){
+    var tbl=document.getElementById('nbTableHost').innerHTML;
+    var doc='<!DOCTYPE html><html><head><meta charset="utf-8"><title>Disease Prevention Strategies Summary</title>'+
+      '<style>body{font-family:Georgia,serif;margin:30px;color:#21271f;}h1{font-size:22px;}'+
+      'table{width:100%;border-collapse:collapse;}th,td{border:1px solid #999;padding:8px;vertical-align:top;font-size:13px;text-align:left;}'+
+      'thead th{background:#21271f;color:#fff;}ul{margin:0;padding-left:18px;}</style></head><body>'+
+      '<h1>Disease Prevention Strategies: Summary</h1>'+tbl+'</body></html>';
+    var blob=new Blob([doc],{type:'text/html'});
+    var a=document.createElement('a');a.href=URL.createObjectURL(blob);
+    a.download='disease-prevention-summary.html';document.body.appendChild(a);a.click();
+    setTimeout(function(){URL.revokeObjectURL(a.href);a.remove();},500);
+  }
+
+  document.getElementById('restartBtn').addEventListener('click',resetAll);
+  function resetAll(){
+    clearInterval(state.timer);
+    state={score:0,streak:0,bestStreak:0,wrong:0,placed:0,started:false,startTime:0,timer:null};
+    document.getElementById('sTime').textContent='0:00';
+    updateStats();buildBoard();buildQueue();renderCurrent();
+  }
+
+  var actx=null;
+  function beep(freq,dur){
+    try{
+      if(!actx)actx=new (window.AudioContext||window.webkitAudioContext)();
+      var o=actx.createOscillator(),g=actx.createGain();
+      o.frequency.value=freq;o.type='sine';o.connect(g);g.connect(actx.destination);
+      g.gain.setValueAtTime(0.06,actx.currentTime);
+      g.gain.exponentialRampToValueAtTime(0.0001,actx.currentTime+dur);
+      o.start();o.stop(actx.currentTime+dur);
+    }catch(e){}
+  }
+
+  var cv=document.getElementById('confetti'),cx=cv.getContext('2d'),parts=[],raf=null;
+  function sizeCv(){cv.width=window.innerWidth;cv.height=window.innerHeight;}
+  window.addEventListener('resize',sizeCv);sizeCv();
+  function colVal(v){var m={'var(--c-php)':'#0e8088','var(--c-quar)':'#c2741b','var(--c-pest)':'#5a8a2c','var(--c-gene)':'#6b4ea6','var(--c-vacc)':'#b23a4a'};return m[v]||'#21271f';}
+  function burst(color){
+    for(var i=0;i<70;i++){parts.push({x:window.innerWidth/2,y:window.innerHeight/2,
+      vx:(Math.random()-.5)*12,vy:(Math.random()-.5)*12-3,g:.28,life:60+Math.random()*30,
+      size:5+Math.random()*6,col:Math.random()<.5?color:'#21271f',rot:Math.random()*6});}
+    runConfetti();
+  }
+  function bigCelebrate(){
+    var cols=['#0e8088','#c2741b','#5a8a2c','#6b4ea6','#b23a4a','#21271f'];
+    for(var i=0;i<220;i++){parts.push({x:Math.random()*window.innerWidth,y:-20,
+      vx:(Math.random()-.5)*5,vy:Math.random()*4+2,g:.16,life:120+Math.random()*80,
+      size:6+Math.random()*7,col:cols[i%cols.length],rot:Math.random()*6});}
+    runConfetti();
+  }
+  function runConfetti(){if(raf)return;cv.style.display='block';loop();}
+  function loop(){
+    cx.clearRect(0,0,cv.width,cv.height);
+    for(var i=parts.length-1;i>=0;i--){
+      var p=parts[i];p.vy+=p.g;p.x+=p.vx;p.y+=p.vy;p.life--;p.rot+=.2;
+      cx.save();cx.translate(p.x,p.y);cx.rotate(p.rot);cx.fillStyle=p.col;
+      cx.fillRect(-p.size/2,-p.size/2,p.size,p.size*.6);cx.restore();
+      if(p.life<=0||p.y>cv.height+40)parts.splice(i,1);
+    }
+    if(parts.length){raf=requestAnimationFrame(loop);}else{raf=null;cx.clearRect(0,0,cv.width,cv.height);cv.style.display='none';}
+  }
+
+  buildBoard();buildQueue();renderCurrent();updateStats();
+})();
+</script>
+</body>
+</html>
